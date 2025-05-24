@@ -1,16 +1,28 @@
 {% extends "base.html" %}
 
-{% block title %}{{ article.title }}{% endblock %}
+{% block title %}{{ article.title }} - Новостной портал{% endblock %}
+
+{% block styles %}
+<link href="{{ url_for('static', filename='css/article.css') }}" rel="stylesheet">
+{% endblock %}
 
 {% block content %}
-<article>
-    <h1 class="mb-4">{{ article.title }}</h1>
-    <div class="text-muted mb-4">
-        Автор: {{ article.author_name }}<br>
-        Опубликовано: {{ article.publish_time.strftime('%d.%m.%Y %H:%M') }}
-    </div>
+<article class="fade-in">
+    <header class="article-header">
+        <h1 class="article-title">{{ article.title }}</h1>
+        <div class="article-meta">
+            <div class="article-author">
+                <img src="https://ui-avatars.com/api/?name={{ article.author }}&background=random" alt="{{ article.author }}">
+                <span>{{ article.author }}</span>
+            </div>
+            <time datetime="{{ article.publish_time.isoformat() }}">
+                {{ article.publish_time.strftime('%d.%m.%Y %H:%M') }}
+            </time>
+        </div>
+    </header>
+    
     <div class="article-content">
-        {{ article.content | safe }}
+        {{ article.content|safe }}
     </div>
 </article>
 {% endblock %} 

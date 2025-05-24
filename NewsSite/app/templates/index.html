@@ -1,41 +1,57 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-md-6">
-        <form class="d-flex" method="get">
-            <input type="text" name="author" class="form-control me-2" placeholder="Фильтр по автору" value="{{ author }}">
-            <select name="sort" class="form-select me-2" style="width: auto;">
-                <option value="desc" {% if sort == 'desc' %}selected{% endif %}>Сначала новые</option>
-                <option value="asc" {% if sort == 'asc' %}selected{% endif %}>Сначала старые</option>
+<div class="row mb-4 fade-in">
+    <div class="col-md-8 mx-auto">
+        <form class="d-flex flex-wrap gap-2" method="get">
+            <div class="flex-grow-1">
+                <div class="input-group">
+                    <span class="input-group-text bg-transparent border-end-0">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" name="author" class="form-control border-start-0" placeholder="Поиск по автору" value="{{ author }}">
+                </div>
+            </div>
+            <select name="sort" class="form-select" style="width: auto;">
+                <option value="desc" {% if sort == 'desc' %}selected{% endif %}>
+                    <i class="bi bi-arrow-down"></i> Сначала новые
+                </option>
+                <option value="asc" {% if sort == 'asc' %}selected{% endif %}>
+                    <i class="bi bi-arrow-up"></i> Сначала старые
+                </option>
             </select>
-            <select name="per_page" class="form-select me-2" style="width: auto;">
+            <select name="per_page" class="form-select" style="width: auto;">
                 {% for option in config.ITEMS_PER_PAGE_OPTIONS %}
-                <option value="{{ option }}" {% if pagination.per_page == option %}selected{% endif %}>{{ option }} новостей</option>
+                <option value="{{ option }}" {% if pagination.per_page == option %}selected{% endif %}>
+                    {{ option }} новостей
+                </option>
                 {% endfor %}
             </select>
-            <button type="submit" class="btn btn-primary">Применить</button>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-funnel"></i> Применить
+            </button>
         </form>
     </div>
 </div>
 
-<div class="row">
+<div class="row g-4">
     {% for article in articles %}
-    <div class="col-md-4 mb-4">
+    <div class="col-md-4 fade-in" style="animation-delay: {{ loop.index0 * 0.1 }}s">
         <div class="card h-100">
             <div class="card-body">
                 <h5 class="card-title">
-                    <a href="{{ url_for('main.article', id=article.id) }}" target="_blank" class="text-decoration-none">
+                    <a href="{{ url_for('main.article', id=article.id) }}" target="_blank" class="text-decoration-none text-primary">
                         {{ article.title }}
                     </a>
                 </h5>
-                <p class="card-text">{{ article.content[:50] }}...</p>
-                <p class="card-text">
-                    <small class="text-muted">
-                        Автор: {{ article.author_name }}<br>
-                        Опубликовано: {{ article.publish_time.strftime('%d.%m.%Y %H:%M') }}
-                    </small>
-                </p>
+                <p class="card-text text-muted">{{ article.content[:50] }}...</p>
+                <div class="d-flex align-items-center mt-3">
+                    <i class="bi bi-person-circle me-2"></i>
+                    <span class="text-muted">{{ article.author_name }}</span>
+                    <span class="mx-2 text-muted">•</span>
+                    <i class="bi bi-clock me-2"></i>
+                    <span class="text-muted">{{ article.publish_time.strftime('%d.%m.%Y %H:%M') }}</span>
+                </div>
             </div>
         </div>
     </div>
@@ -43,8 +59,16 @@
 </div>
 
 {% if pagination.pages > 1 %}
-<nav aria-label="Page navigation">
+<nav aria-label="Page navigation" class="mt-5 fade-in">
     <ul class="pagination justify-content-center">
+        {% if pagination.has_prev %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('main.index', page=pagination.prev_num, per_page=pagination.per_page, author=author, sort=sort) }}">
+                <i class="bi bi-chevron-left"></i>
+            </a>
+        </li>
+        {% endif %}
+        
         {% for page in pagination.iter_pages() %}
             {% if page %}
                 <li class="page-item {% if page == pagination.page %}active{% endif %}">
@@ -58,6 +82,14 @@
                 </li>
             {% endif %}
         {% endfor %}
+        
+        {% if pagination.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('main.index', page=pagination.next_num, per_page=pagination.per_page, author=author, sort=sort) }}">
+                <i class="bi bi-chevron-right"></i>
+            </a>
+        </li>
+        {% endif %}
     </ul>
 </nav>
 {% endif %}
