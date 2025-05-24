@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}{{ article.title }}{% endblock %}
+
+{% block content %}
+<article>
+    <h1 class="mb-4">{{ article.title }}</h1>
+    <div class="text-muted mb-4">
+        Автор: {{ article.author_name }}<br>
+        Опубликовано: {{ article.publish_time.strftime('%d.%m.%Y %H:%M') }}
+    </div>
+    <div class="article-content">
+        {{ article.content | safe }}
+    </div>
+</article>
+{% endblock %} 

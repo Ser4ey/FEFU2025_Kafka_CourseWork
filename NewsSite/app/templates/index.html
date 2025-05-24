@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <form class="d-flex" method="get">
+            <input type="text" name="author" class="form-control me-2" placeholder="Фильтр по автору" value="{{ author }}">
+            <select name="sort" class="form-select me-2" style="width: auto;">
+                <option value="desc" {% if sort == 'desc' %}selected{% endif %}>Сначала новые</option>
+                <option value="asc" {% if sort == 'asc' %}selected{% endif %}>Сначала старые</option>
+            </select>
+            <select name="per_page" class="form-select me-2" style="width: auto;">
+                {% for option in config.ITEMS_PER_PAGE_OPTIONS %}
+                <option value="{{ option }}" {% if pagination.per_page == option %}selected{% endif %}>{{ option }} новостей</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-primary">Применить</button>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    {% for article in articles %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <a href="{{ url_for('main.article', id=article.id) }}" target="_blank" class="text-decoration-none">
+                        {{ article.title }}
+                    </a>
+                </h5>
+                <p class="card-text">{{ article.content[:50] }}...</p>
+                <p class="card-text">
+                    <small class="text-muted">
+                        Автор: {{ article.author_name }}<br>
+                        Опубликовано: {{ article.publish_time.strftime('%d.%m.%Y %H:%M') }}
+                    </small>
+                </p>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if pagination.pages > 1 %}
+<nav aria-label="Page navigation">
+    <ul class="pagination justify-content-center">
+        {% for page in pagination.iter_pages() %}
+            {% if page %}
+                <li class="page-item {% if page == pagination.page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('main.index', page=page, per_page=pagination.per_page, author=author, sort=sort) }}">
+                        {{ page }}
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %} 
