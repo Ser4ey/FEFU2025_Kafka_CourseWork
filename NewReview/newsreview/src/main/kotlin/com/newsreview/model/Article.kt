@@ -2,6 +2,7 @@ package com.newsreview.model
 
 import org.springframework.data.annotation.Id
 import org.springframework.data.relational.core.mapping.Table
+import java.time.LocalDateTime
 
 @Table("articles")
 data class Article(
@@ -10,5 +11,6 @@ data class Article(
     val newsId: String,
     val title: String,
     val content: String,
-    val authorName: String
+    val authorName: String,
+    val publishTime: LocalDateTime
 ) 
