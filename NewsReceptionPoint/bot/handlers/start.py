@@ -4,8 +4,8 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
-from src.database.models import Correspondent
-from src.database.session import async_session
+from database.models import Correspondent
+from database.session import async_session
 
 router = Router()
 

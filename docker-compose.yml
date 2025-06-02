@@ -30,9 +30,22 @@ services:
     networks:
       - kafka_network
 
+  postgresql-1:
+    image: postgres:16
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: news_reception
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgresql-1:/var/lib/postgresql/data
+
+
 volumes:
   kafka_data:
     driver: local
+  postgresql-1: { }
 
 networks:
   kafka_network:

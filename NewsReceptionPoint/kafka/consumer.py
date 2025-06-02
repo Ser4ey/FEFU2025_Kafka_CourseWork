@@ -3,7 +3,7 @@ import asyncio
 from aiokafka import AIOKafkaConsumer
 from aiogram import Bot
 
-from src.config import settings
+from config import settings
 
 async def consume_reviewed_news(bot: Bot):
     consumer = AIOKafkaConsumer(

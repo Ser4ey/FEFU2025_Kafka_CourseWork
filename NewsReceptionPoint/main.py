@@ -3,11 +3,11 @@ import logging
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 
-from src.config import settings
-from src.bot.handlers import start, suggest_news
-from src.kafka.consumer import consume_reviewed_news
-from src.database.models import Base
-from src.database.session import engine
+from config import settings
+from bot.handlers import start, suggest_news
+from kafka.consumer import consume_reviewed_news
+from database.models import Base
+from database.session import engine
 
 async def main():
     # Настройка логирования

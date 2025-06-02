@@ -1,7 +1,7 @@
 import json
 from aiokafka import AIOKafkaProducer
 
-from src.config import settings
+from config import settings
 
 async def get_producer():
     producer = AIOKafkaProducer(
