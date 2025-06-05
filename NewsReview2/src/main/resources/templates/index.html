@@ -40,6 +40,13 @@
     <div class="container">
         <h1 class="text-center mb-4">Система рецензирования новостей</h1>
         
+        <!-- Error message display -->
+        <div th:if="${hasError}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>Ошибка!</strong> 
+            <span th:text="${errorMessage}">Произошла ошибка</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        
         <div th:if="${hasNews}" class="news-card">
             <h2 th:text="${news.newsTitle}" class="mb-3">Заголовок новости</h2>
             
@@ -71,8 +78,12 @@
         
         <div th:unless="${hasNews}" class="no-news-message">
             <h3 th:text="${errorMessage}">Нет новостей для рецензирования</h3>
-            <p>Пожалуйста, проверьте позже или убедитесь, что Kafka работает корректно.</p>
-            <a href="/" class="btn btn-primary mt-3">Обновить</a>
+            <p th:unless="${hasError}">Пожалуйста, проверьте позже или убедитесь, что Kafka работает корректно.</p>
+            <div class="mt-3">
+                <a href="/" class="btn btn-primary me-2">Обновить</a>
+                <a href="/health/db" class="btn btn-secondary me-2" target="_blank">Проверить БД</a>
+                <a href="/health/articles" class="btn btn-info" target="_blank">Показать статьи</a>
+            </div>
         </div>
     </div>
     

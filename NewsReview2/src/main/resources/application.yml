@@ -5,6 +5,15 @@ spring:
     url: r2dbc:postgresql://localhost:5433/news_db
     username: postgres
     password: postgres
+    pool:
+      initial-size: 5
+      max-size: 20
+      max-idle-time: 30m
+      validation-query: SELECT 1
+  sql:
+    init:
+      mode: always
+      continue-on-error: false
   kafka:
     bootstrap-servers: localhost:9094
     consumer:

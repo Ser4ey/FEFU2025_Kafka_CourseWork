@@ -26,10 +26,12 @@ class NewsService(
     private var currentNews: NewsToReview? = null
 
     init {
+        println("Initializing NewsService...")
         // Start consuming messages with manual acknowledgment
         consumer.receive()
             .doOnNext { record ->
                 val news = record.value()
+                println("Received news from Kafka: ${news.newsId} - ${news.newsTitle}")
                 // Store the record with its acknowledgment capability
                 pendingNews[news.newsId] = Pair(news, record)
                 
@@ -37,14 +39,23 @@ class NewsService(
                 if (currentNews == null) {
                     currentNews = news
                     newsBuffer.tryEmitNext(news)
+                    println("Set current news to: ${news.newsId}")
                 }
             }
+            .doOnError { error ->
+                println("Error in Kafka consumer: ${error.message}")
+                error.printStackTrace()
+            }
             .subscribe()
+        println("NewsService initialized and Kafka consumer started")
     }
 
     fun getNextNewsReactive(): Mono<NewsToReview> {
+        println("Getting next news... Current news: ${currentNews?.newsId}, Pending news count: ${pendingNews.size}")
+        
         // If we have a current news item, return it
         currentNews?.let { news ->
+            println("Returning current news: ${news.newsId}")
             return Mono.just(news)
         }
         
@@ -53,21 +64,30 @@ class NewsService(
             .next()
             .doOnNext { news ->
                 currentNews = news
+                println("Got news from buffer: ${news.newsId}")
             }
-            .switchIfEmpty(Mono.empty())
+            .switchIfEmpty(
+                Mono.fromCallable {
+                    println("No news available in buffer")
+                    null
+                }.then(Mono.empty())
+            )
     }
 
     fun reviewNewsReactive(newsId: String, isAccepted: Boolean, comment: String): Mono<Void> {
+        println("Starting review process for newsId: $newsId, isAccepted: $isAccepted")
         val newsData = pendingNews.remove(newsId)
 
         return if (newsData != null) {
             val (news, record) = newsData
+            println("Found news data for newsId: $newsId")
             
             // Clear current news since it's being processed
             if (currentNews?.newsId == newsId) {
                 currentNews = null
                 // Try to get the next news item
                 getNextAvailableNews()
+                println("Cleared current news and getting next available news")
             }
 
             val reviewed = NewsReviewed(
@@ -92,12 +112,20 @@ class NewsService(
                     newsId = news.newsId,
                     title = news.newsTitle,
                     content = news.newsContent,
-                    authorName = news.authorTelegramId.toString(),
+                    authorName = news.authorName,
                     publishTime = LocalDateTime.now()
                 )
 
                 chain = chain.then(kafkaService.sendNewsToPublic(newsToPublic))
-                    .then(mono { articleRepository.save(article) }.then())
+                    .then(mono { 
+                        println("Saving article to database: ${article.newsId}")
+                        articleRepository.save(article)
+                    }.doOnSuccess {
+                        println("Successfully saved article to database: ${article.newsId}")
+                    }.doOnError { error ->
+                        println("Error saving article to database: ${error.message}")
+                        error.printStackTrace()
+                    }.then())
             }
 
             // Acknowledge the message only after successful processing
@@ -107,9 +135,12 @@ class NewsService(
             .doOnError { error ->
                 // On error, don't acknowledge - message will be redelivered
                 println("Error processing news $newsId: ${error.message}")
+                error.printStackTrace()
             }
+            .then()
         } else {
-            Mono.empty()
+            println("Warning: News with ID $newsId not found in pending news")
+            Mono.empty<Void>()
         }
     }
 
@@ -123,7 +154,6 @@ class NewsService(
         }
     }
 
-    // Blocking versions for backward compatibility if needed
     suspend fun getNextNews(): NewsToReview? {
         return getNextNewsReactive().block()
     }
