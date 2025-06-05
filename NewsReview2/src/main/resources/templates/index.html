@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Система рецензирования новостей</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding-top: 2rem;
+            background-color: #f8f9fa;
+        }
+        .news-card {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            padding: 20px;
+            background-color: white;
+            margin-bottom: 20px;
+        }
+        .news-content {
+            white-space: pre-line;
+            margin-bottom: 20px;
+        }
+        .review-form {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .no-news-message {
+            text-align: center;
+            padding: 50px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mb-4">Система рецензирования новостей</h1>
+        
+        <div th:if="${hasNews}" class="news-card">
+            <h2 th:text="${news.newsTitle}" class="mb-3">Заголовок новости</h2>
+            
+            <div class="mb-3">
+                <strong>Автор:</strong> <span th:text="${news.authorName}">Имя автора</span>
+            </div>
+            
+            <div class="news-content" th:text="${news.newsContent}">
+                Содержание новости...
+            </div>
+            
+            <div class="review-form">
+                <h4>Рецензирование</h4>
+                <form th:action="@{/review}" method="post">
+                    <input type="hidden" name="newsId" th:value="${news.newsId}">
+                    
+                    <div class="mb-3">
+                        <label for="comment" class="form-label">Комментарий редактора:</label>
+                        <textarea class="form-control" id="comment" name="comment" rows="3" required></textarea>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <button type="submit" name="isAccepted" value="true" class="btn btn-success">Принять новость</button>
+                        <button type="submit" name="isAccepted" value="false" class="btn btn-danger">Отклонить новость</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div th:unless="${hasNews}" class="no-news-message">
+            <h3 th:text="${errorMessage}">Нет новостей для рецензирования</h3>
+            <p>Пожалуйста, проверьте позже или убедитесь, что Kafka работает корректно.</p>
+            <a href="/" class="btn btn-primary mt-3">Обновить</a>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

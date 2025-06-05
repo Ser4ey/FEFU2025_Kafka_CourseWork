@@ -1,4 +1,4 @@
-package com.newsreview.model
+package org.example.newsreview.model
 
 data class NewsToReview(
     val newsId: String,
@@ -7,4 +7,5 @@ data class NewsToReview(
     val newsTitle: String,
     val newsContent: String
 )
+
 

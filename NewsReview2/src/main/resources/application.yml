@@ -14,6 +14,8 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         spring.json.trusted.packages: "org.example.newsreview.model"
+        spring.json.value.default.type: "org.example.newsreview.model.NewsToReview"
+        spring.json.use.type.info.headers: false
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
@@ -25,6 +27,7 @@ logging:
   level:
     io.r2dbc.postgresql.QUERY: DEBUG
     io.r2dbc.postgresql.PARAM: DEBUG
+    org.springframework.kafka: DEBUG
 
 springdoc:
   api-docs:

@@ -1,4 +1,4 @@
-package com.newsreview.model
+package org.example.newsreview.model
 
 data class NewsToPublic(
     val newsId: String,
