@@ -1,6 +1,6 @@
 package org.example.newsreview.controller
 
-import org.example.newsreview.model.NewsToReview
+import com.newsreview.model.NewsToReview
 import org.example.newsreview.service.NewsService
 import org.springframework.web.bind.annotation.*
 import reactor.core.publisher.Mono

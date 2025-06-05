@@ -5,4 +5,5 @@ data class NewsToPublic(
     val authorName: String,
     val newsTitle: String,
     val newsContent: String
-) 
+)
+

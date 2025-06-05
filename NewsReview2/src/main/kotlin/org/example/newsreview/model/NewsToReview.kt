@@ -6,4 +6,5 @@ data class NewsToReview(
     val authorName: String,
     val newsTitle: String,
     val newsContent: String
-) 
+)
+

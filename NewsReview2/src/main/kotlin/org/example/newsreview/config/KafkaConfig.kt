@@ -1,6 +1,6 @@
 package org.example.newsreview.config
 
-import org.example.newsreview.model.NewsToReview
+import com.newsreview.model.NewsToReview
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration

@@ -6,4 +6,5 @@ data class NewsReviewed(
     val newsTitle: String,
     val isAccepted: Boolean,
     val redactorComment: String
-) 
+)
+

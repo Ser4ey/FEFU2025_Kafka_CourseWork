@@ -1,13 +1,12 @@
 package org.example.newsreview.service
 
 import org.example.newsreview.model.Article
-import org.example.newsreview.model.NewsReviewed
-import org.example.newsreview.model.NewsToPublic
-import org.example.newsreview.model.NewsToReview
+import com.newsreview.model.NewsReviewed
+import com.newsreview.model.NewsToPublic
+import com.newsreview.model.NewsToReview
 import org.example.newsreview.repository.ArticleRepository
 import org.springframework.kafka.core.reactive.ReactiveKafkaConsumerTemplate
 import org.springframework.stereotype.Service
-import reactor.core.publisher.Mono
 import java.time.LocalDateTime
 
 @Service
@@ -37,13 +36,12 @@ class NewsService(
         if (isAccepted) {
             val newsToPublic = NewsToPublic(
                 newsId = news.newsId,
-                authorTelegramId = news.authorTelegramId,
+                authorName = news.authorName,
                 newsTitle = news.newsTitle,
                 newsContent = news.newsContent
             )
             kafkaService.sendNewsToPublic(newsToPublic)
 
-            // Save to database
             val article = Article(
                 newsId = news.newsId,
                 title = news.newsTitle,
