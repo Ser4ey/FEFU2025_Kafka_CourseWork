@@ -5,28 +5,32 @@ import org.example.newsreview.service.NewsService
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.*
-import org.springframework.web.reactive.result.view.Rendering
 import reactor.core.publisher.Mono
 
 @Controller
 class WebController(private val newsService: NewsService) {
 
     @GetMapping("/")
-    fun index(model: Model): Mono<Rendering> {
+    fun index(model: Model): Mono<String> {
         return newsService.getNextNewsReactive()
             .map { news ->
-                Rendering.view("index")
-                    .modelAttribute("news", news)
-                    .modelAttribute("hasNews", true)
-                    .build()
+                model.addAttribute("news", news)
+                model.addAttribute("hasNews", true)
+                "index"
             }
+            .switchIfEmpty(
+                Mono.fromCallable {
+                    model.addAttribute("hasNews", false)
+                    model.addAttribute("errorMessage", "Нет новостей для рецензирования")
+                    "index"
+                }
+            )
             .onErrorResume { error ->
-                Mono.just(
-                    Rendering.view("index")
-                        .modelAttribute("hasNews", false)
-                        .modelAttribute("errorMessage", "Нет новостей для рецензирования")
-                        .build()
-                )
+                Mono.fromCallable {
+                    model.addAttribute("hasNews", false)
+                    model.addAttribute("errorMessage", "Ошибка при загрузке новостей: ${error.message}")
+                    "index"
+                }
             }
     }
 
@@ -35,8 +39,8 @@ class WebController(private val newsService: NewsService) {
         @RequestParam newsId: String,
         @RequestParam isAccepted: Boolean,
         @RequestParam comment: String
-    ): Mono<Rendering> {
+    ): Mono<String> {
         return newsService.reviewNewsReactive(newsId, isAccepted, comment)
-            .then(Mono.just(Rendering.redirectTo("/").build()))
+            .then(Mono.just("redirect:/"))
     }
 }

@@ -29,7 +29,8 @@ class KafkaConfig {
         props[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = JsonDeserializer::class.java
         props[ConsumerConfig.GROUP_ID_CONFIG] = "news-review-group"
         props[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest"
-        props[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = true
+        props[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = false  // Disable auto-commit for manual acknowledgment
+        props[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = 1  // Process one message at a time
 
         // Configure JsonDeserializer
         props[JsonDeserializer.TRUSTED_PACKAGES] = "org.example.newsreview.model"

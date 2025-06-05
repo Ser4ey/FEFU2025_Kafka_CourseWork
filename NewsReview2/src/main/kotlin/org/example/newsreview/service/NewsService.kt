@@ -1,6 +1,7 @@
 package org.example.newsreview.service
 
 import kotlinx.coroutines.reactor.mono
+import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.example.newsreview.model.Article
 import org.example.newsreview.model.NewsReviewed
 import org.example.newsreview.model.NewsToPublic
@@ -10,6 +11,7 @@ import org.springframework.kafka.core.reactive.ReactiveKafkaConsumerTemplate
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
 import reactor.core.publisher.Sinks
+import reactor.kafka.receiver.ReceiverRecord
 import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentHashMap
 
@@ -19,30 +21,55 @@ class NewsService(
     private val kafkaService: KafkaService,
     private val articleRepository: ArticleRepository
 ) {
-    private val pendingNews = ConcurrentHashMap<String, NewsToReview>()
+    private val pendingNews = ConcurrentHashMap<String, Pair<NewsToReview, ReceiverRecord<String, NewsToReview>>>()
     private val newsBuffer = Sinks.many().multicast().onBackpressureBuffer<NewsToReview>()
+    private var currentNews: NewsToReview? = null
 
     init {
-        // Start consuming messages and buffer them
-        consumer.receiveAutoAck()
-            .map { it.value() }
-            .doOnNext { news ->
-                pendingNews[news.newsId] = news
-                newsBuffer.tryEmitNext(news)
+        // Start consuming messages with manual acknowledgment
+        consumer.receive()
+            .doOnNext { record ->
+                val news = record.value()
+                // Store the record with its acknowledgment capability
+                pendingNews[news.newsId] = Pair(news, record)
+                
+                // Only emit to buffer if we don't have a current news item
+                if (currentNews == null) {
+                    currentNews = news
+                    newsBuffer.tryEmitNext(news)
+                }
             }
             .subscribe()
     }
 
     fun getNextNewsReactive(): Mono<NewsToReview> {
+        // If we have a current news item, return it
+        currentNews?.let { news ->
+            return Mono.just(news)
+        }
+        
+        // Otherwise, wait for the next one from the buffer
         return newsBuffer.asFlux()
             .next()
+            .doOnNext { news ->
+                currentNews = news
+            }
             .switchIfEmpty(Mono.empty())
     }
 
     fun reviewNewsReactive(newsId: String, isAccepted: Boolean, comment: String): Mono<Void> {
-        val news = pendingNews.remove(newsId)
+        val newsData = pendingNews.remove(newsId)
 
-        return if (news != null) {
+        return if (newsData != null) {
+            val (news, record) = newsData
+            
+            // Clear current news since it's being processed
+            if (currentNews?.newsId == newsId) {
+                currentNews = null
+                // Try to get the next news item
+                getNextAvailableNews()
+            }
+
             val reviewed = NewsReviewed(
                 newsId = news.newsId,
                 authorTelegramId = news.authorTelegramId,
@@ -73,9 +100,26 @@ class NewsService(
                     .then(mono { articleRepository.save(article) }.then())
             }
 
-            chain
+            // Acknowledge the message only after successful processing
+            chain.doOnSuccess { 
+                record.receiverOffset().acknowledge()
+            }
+            .doOnError { error ->
+                // On error, don't acknowledge - message will be redelivered
+                println("Error processing news $newsId: ${error.message}")
+            }
         } else {
             Mono.empty()
+        }
+    }
+
+    private fun getNextAvailableNews() {
+        // Find the next available news item that hasn't been set as current
+        pendingNews.values.firstOrNull { (news, _) -> 
+            news.newsId != currentNews?.newsId 
+        }?.let { (news, _) ->
+            currentNews = news
+            newsBuffer.tryEmitNext(news)
         }
     }
 
