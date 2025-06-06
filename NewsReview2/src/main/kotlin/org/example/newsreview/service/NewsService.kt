@@ -1,7 +1,6 @@
 package org.example.newsreview.service
 
 import kotlinx.coroutines.reactor.mono
-import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.example.newsreview.model.Article
 import org.example.newsreview.model.NewsReviewed
 import org.example.newsreview.model.NewsToPublic
@@ -27,15 +26,12 @@ class NewsService(
 
     init {
         println("Initializing NewsService...")
-        // Start consuming messages with manual acknowledgment
         consumer.receive()
             .doOnNext { record ->
                 val news = record.value()
                 println("Received news from Kafka: ${news.newsId} - ${news.newsTitle}")
-                // Store the record with its acknowledgment capability
                 pendingNews[news.newsId] = Pair(news, record)
                 
-                // Only emit to buffer if we don't have a current news item
                 if (currentNews == null) {
                     currentNews = news
                     newsBuffer.tryEmitNext(news)
@@ -58,14 +54,13 @@ class NewsService(
             println("Force refresh requested, clearing current news")
             currentNews = null
         }
-        
-        // If we already have a current news item, return it
+
         currentNews?.let {
             println("Returning existing current news with ID: '${it.newsId}'")
             return Mono.just(it)
         }
 
-        // If we have pending news, get the next one
+        // Получаем следующую новость, если мы ожидаем новость
         if (pendingNews.isNotEmpty()) {
             val nextNewsId = pendingNews.keys.firstOrNull()
             if (nextNewsId != null) {
@@ -76,7 +71,6 @@ class NewsService(
             }
         }
 
-        // If we have news in the buffer, get the next one
         return newsBuffer.asFlux()
             .next()
             .doOnNext { news ->
@@ -110,11 +104,9 @@ class NewsService(
         return if (newsData != null) {
             val (news, record) = newsData
             println("Found news data for newsId: '$newsId'")
-            
-            // Clear current news since it's being processed
+
             if (currentNews?.newsId == newsId) {
                 currentNews = null
-                // Try to get the next news item
                 getNextAvailableNews()
                 println("Cleared current news and getting next available news")
             }
@@ -157,13 +149,12 @@ class NewsService(
                     }.then())
             }
 
-            // Acknowledge the message only after successful processing
+            // Подтверждаем сообщение Acknowledge the message only after successful processing
             chain.doOnSuccess { 
                 record.receiverOffset().acknowledge()
                 println("Successfully acknowledged message: $newsId")
             }
             .doOnError { error ->
-                // On error, don't acknowledge - message will be redelivered
                 println("Error processing news '$newsId': ${error.message}")
                 error.printStackTrace()
             }
@@ -171,13 +162,12 @@ class NewsService(
         } else {
             println("Warning: News with ID '$newsId' not found in pending news")
             println("Available news IDs: ${pendingNews.keys.joinToString()}")
-            Mono.empty<Void>()
+            Mono.empty()
         }
     }
 
     private fun getNextAvailableNews() {
-        // Find the next available news item that hasn't been set as current
-        pendingNews.values.firstOrNull { (news, _) -> 
+        pendingNews.values.firstOrNull { (news, _) ->
             news.newsId != currentNews?.newsId 
         }?.let { (news, _) ->
             currentNews = news
@@ -185,11 +175,4 @@ class NewsService(
         }
     }
 
-    suspend fun getNextNews(forceRefresh: Boolean = false): NewsToReview? {
-        return getNextNewsReactive(forceRefresh).block()
-    }
-
-    suspend fun reviewNews(news: NewsToReview, isAccepted: Boolean, comment: String) {
-        reviewNewsReactive(news.newsId, isAccepted, comment).block()
-    }
 }

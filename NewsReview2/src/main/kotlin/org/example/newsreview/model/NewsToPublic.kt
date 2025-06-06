@@ -6,4 +6,3 @@ data class NewsToPublic(
     val newsTitle: String,
     val newsContent: String
 )
-

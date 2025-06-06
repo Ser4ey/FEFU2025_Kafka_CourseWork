@@ -7,4 +7,3 @@ data class NewsReviewed(
     val isAccepted: Boolean,
     val redactorComment: String
 )
-

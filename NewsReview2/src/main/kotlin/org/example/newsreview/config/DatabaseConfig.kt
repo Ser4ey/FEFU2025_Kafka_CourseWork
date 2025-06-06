@@ -16,7 +16,7 @@ class DatabaseConfig {
         val initializer = ConnectionFactoryInitializer()
         initializer.setConnectionFactory(connectionFactory)
         
-        val populator = ResourceDatabasePopulator(ClassPathResource("shema.sql"))
+        val populator = ResourceDatabasePopulator(ClassPathResource("static/schema.sql"))
         initializer.setDatabasePopulator(populator)
         
         return initializer

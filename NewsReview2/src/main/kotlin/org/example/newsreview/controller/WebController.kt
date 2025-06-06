@@ -1,6 +1,5 @@
 package org.example.newsreview.controller
 
-import org.example.newsreview.model.NewsToReview
 import org.example.newsreview.service.NewsService
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
@@ -14,7 +13,7 @@ class WebController(private val newsService: NewsService) {
     fun index(model: Model, 
              @RequestParam(required = false) error: String?,
              @RequestParam(required = false) refresh: String?): Mono<String> {
-        // Add error message if present
+        // Сообщение об ошибке (если есть)
         error?.let { 
             when (it) {
                 "review_failed" -> model.addAttribute("errorMessage", "Произошла ошибка при обработке новости. Попробуйте еще раз.")

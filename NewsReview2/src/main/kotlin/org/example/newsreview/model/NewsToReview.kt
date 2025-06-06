@@ -7,5 +7,3 @@ data class NewsToReview(
     val newsTitle: String,
     val newsContent: String
 )
-
-
