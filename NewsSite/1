@@ -1,9 +1,0 @@
-NewsSite/
-├── app/
-│   ├── models/
-│   ├── views/
-│   ├── controllers/
-│   ├── templates/
-│   └── static/
-├── config.py
-└── run.py
