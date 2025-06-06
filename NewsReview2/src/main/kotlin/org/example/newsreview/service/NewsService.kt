@@ -51,36 +51,59 @@ class NewsService(
     }
 
     fun getNextNewsReactive(): Mono<NewsToReview> {
-        println("Getting next news... Current news: ${currentNews?.newsId}, Pending news count: ${pendingNews.size}")
+        println("Getting next news, current news: ${currentNews?.newsId}, pending news count: ${pendingNews.size}")
         
-        // If we have a current news item, return it
-        currentNews?.let { news ->
-            println("Returning current news: ${news.newsId}")
-            return Mono.just(news)
+        // If we already have a current news item, return it
+        currentNews?.let {
+            println("Returning existing current news with ID: '${it.newsId}'")
+            return Mono.just(it)
         }
-        
-        // Otherwise, wait for the next one from the buffer
+
+        // If we have pending news, get the next one
+        if (pendingNews.isNotEmpty()) {
+            val nextNewsId = pendingNews.keys.firstOrNull()
+            if (nextNewsId != null) {
+                val (news, _) = pendingNews[nextNewsId]!!
+                currentNews = news
+                println("Set current news from pending with ID: '${news.newsId}'")
+                return Mono.just(news)
+            }
+        }
+
+        // If we have news in the buffer, get the next one
         return newsBuffer.asFlux()
             .next()
             .doOnNext { news ->
                 currentNews = news
-                println("Got news from buffer: ${news.newsId}")
+                println("Set current news from buffer with ID: '${news.newsId}'")
             }
             .switchIfEmpty(
                 Mono.fromCallable {
-                    println("No news available in buffer")
+                    println("No news available")
                     null
                 }.then(Mono.empty())
             )
     }
 
     fun reviewNewsReactive(newsId: String, isAccepted: Boolean, comment: String): Mono<Void> {
-        println("Starting review process for newsId: $newsId, isAccepted: $isAccepted")
-        val newsData = pendingNews.remove(newsId)
+        println("Starting review process for newsId: '$newsId', isAccepted: $isAccepted")
+        println("Current pending news keys: ${pendingNews.keys.joinToString()}")
+        
+        // Проверяем, есть ли новость с таким ID напрямую
+        var newsData = pendingNews.remove(newsId)
+        
+        // Если не нашли напрямую, пробуем найти по текущей новости
+        if (newsData == null && currentNews?.newsId != null) {
+            println("Direct match not found, checking if current news ID matches")
+            if (currentNews?.newsId == newsId) {
+                println("Current news ID matches, using it")
+                newsData = pendingNews.remove(currentNews?.newsId)
+            }
+        }
 
         return if (newsData != null) {
             val (news, record) = newsData
-            println("Found news data for newsId: $newsId")
+            println("Found news data for newsId: '$newsId'")
             
             // Clear current news since it's being processed
             if (currentNews?.newsId == newsId) {
@@ -131,15 +154,17 @@ class NewsService(
             // Acknowledge the message only after successful processing
             chain.doOnSuccess { 
                 record.receiverOffset().acknowledge()
+                println("Successfully acknowledged message: $newsId")
             }
             .doOnError { error ->
                 // On error, don't acknowledge - message will be redelivered
-                println("Error processing news $newsId: ${error.message}")
+                println("Error processing news '$newsId': ${error.message}")
                 error.printStackTrace()
             }
             .then()
         } else {
-            println("Warning: News with ID $newsId not found in pending news")
+            println("Warning: News with ID '$newsId' not found in pending news")
+            println("Available news IDs: ${pendingNews.keys.joinToString()}")
             Mono.empty<Void>()
         }
     }

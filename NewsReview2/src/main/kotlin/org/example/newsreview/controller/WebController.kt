@@ -26,6 +26,7 @@ class WebController(private val newsService: NewsService) {
         
         return newsService.getNextNewsReactive()
             .map { news ->
+                println("Adding news to model with ID: '${news.newsId}'")
                 model.addAttribute("news", news)
                 model.addAttribute("hasNews", true)
                 "index"
@@ -51,34 +52,54 @@ class WebController(private val newsService: NewsService) {
 
     @PostMapping("/review")
     fun reviewNews(
-        @RequestParam newsId: String?,
-        @RequestParam isAccepted: Boolean?,
-        @RequestParam comment: String?
+        exchange: org.springframework.web.server.ServerWebExchange
     ): Mono<String> {
-        // Validate parameters
-        if (newsId.isNullOrBlank()) {
-            println("Error: newsId is null or blank")
-            return Mono.just("redirect:/?error=invalid_news_id")
-        }
-        
-        if (isAccepted == null) {
-            println("Error: isAccepted is null")
-            return Mono.just("redirect:/?error=invalid_acceptance_status")
-        }
-        
-        if (comment.isNullOrBlank()) {
-            println("Error: comment is null or blank")
-            return Mono.just("redirect:/?error=invalid_comment")
-        }
-        
-        println("Processing review for newsId: $newsId, isAccepted: $isAccepted, comment: $comment")
-        
-        return newsService.reviewNewsReactive(newsId, isAccepted, comment)
-            .then(Mono.just("redirect:/"))
-            .onErrorResume { error ->
-                println("Error in reviewNews: ${error.message}")
-                error.printStackTrace()
-                Mono.just("redirect:/?error=review_failed")
+        return exchange.formData
+            .flatMap { formData ->
+                val newsId = formData.getFirst("newsId")
+                val isAccepted = formData.getFirst("isAccepted")
+                val comment = formData.getFirst("comment")
+                
+                println("DEBUG - All form data:")
+                formData.forEach { (key, values) ->
+                    println("$key: $values")
+                }
+                
+                println("Request URI: ${exchange.request.uri}")
+                println("Request method: ${exchange.request.method}")
+                println("Request headers: ${exchange.request.headers}")
+                
+                println("Received review request with newsId: '$newsId', isAccepted: $isAccepted, comment: '$comment'")
+                
+                // Validate newsId
+                if (newsId.isNullOrBlank()) {
+                    println("Error: newsId is null or blank")
+                    return@flatMap Mono.just("redirect:/?error=invalid_news_id")
+                }
+
+                // Validate and convert isAccepted
+                val isAcceptedBool = when(isAccepted?.lowercase()) {
+                    "true" -> true
+                    "false" -> false
+                    else -> {
+                        println("Error: isAccepted is invalid: $isAccepted")
+                        return@flatMap Mono.just("redirect:/?error=invalid_acceptance_status")
+                    }
+                }
+
+                // Validate comment
+                if (comment.isNullOrBlank()) {
+                    println("Error: comment is null or blank")
+                    return@flatMap Mono.just("redirect:/?error=invalid_comment")
+                }
+
+                newsService.reviewNewsReactive(newsId, isAcceptedBool, comment)
+                    .then(Mono.just("redirect:/"))
+                    .onErrorResume { error ->
+                        println("Error in reviewNews: ${error.message}")
+                        error.printStackTrace()
+                        Mono.just("redirect:/?error=review_failed")
+                    }
             }
     }
 }
