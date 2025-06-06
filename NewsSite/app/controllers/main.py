@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request
 from app.models.article import Article
 from app import db
+from sqlalchemy import distinct
 
 main_bp = Blueprint('main', __name__)
 
@@ -8,13 +9,17 @@ main_bp = Blueprint('main', __name__)
 def index():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 12, type=int)
-    author = request.args.get('author', '')
+    selected_authors = request.args.getlist('authors')
     sort = request.args.get('sort', 'desc')
+    
+    # Получаем список всех авторов
+    all_authors = db.session.query(distinct(Article.author_name)).order_by(Article.author_name).all()
+    all_authors = [author[0] for author in all_authors]
     
     query = Article.query
     
-    if author:
-        query = query.filter(Article.author_name == author)
+    if selected_authors:
+        query = query.filter(Article.author_name.in_(selected_authors))
     
     if sort == 'asc':
         query = query.order_by(Article.publish_time.asc())
@@ -27,10 +32,11 @@ def index():
     return render_template('index.html',
                          articles=articles,
                          pagination=pagination,
-                         author=author,
+                         selected_authors=selected_authors,
+                         all_authors=all_authors,
                          sort=sort)
 
 @main_bp.route('/article/<int:id>')
 def article(id):
     article = Article.query.get_or_404(id)
-    return render_template('article.html', article=article) 
+    return render_template('article.html', article=article)

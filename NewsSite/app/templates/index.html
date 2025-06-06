@@ -5,31 +5,40 @@
     <div class="col-md-8 mx-auto">
         <form class="d-flex flex-wrap gap-2" method="get">
             <div class="flex-grow-1">
-                <div class="input-group">
-                    <span class="input-group-text bg-transparent border-end-0">
-                        <i class="bi bi-search"></i>
-                    </span>
-                    <input type="text" name="author" class="form-control border-start-0" placeholder="Поиск по автору" value="{{ author }}">
+                <div class="card p-3">
+                    <h5 class="mb-3">Выберите авторов:</h5>
+                    <div class="d-flex flex-wrap gap-3">
+                        {% for author in all_authors %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="authors" value="{{ author }}" id="author-{{ loop.index }}" {% if author in selected_authors %}checked{% endif %}>
+                            <label class="form-check-label" for="author-{{ loop.index }}">
+                                {{ author }}
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
-            <select name="sort" class="form-select" style="width: auto;">
-                <option value="desc" {% if sort == 'desc' %}selected{% endif %}>
-                    <i class="bi bi-arrow-down"></i> Сначала новые
-                </option>
-                <option value="asc" {% if sort == 'asc' %}selected{% endif %}>
-                    <i class="bi bi-arrow-up"></i> Сначала старые
-                </option>
-            </select>
-            <select name="per_page" class="form-select" style="width: auto;">
-                {% for option in config.ITEMS_PER_PAGE_OPTIONS %}
-                <option value="{{ option }}" {% if pagination.per_page == option %}selected{% endif %}>
-                    {{ option }} новостей
-                </option>
-                {% endfor %}
-            </select>
-            <button type="submit" class="btn btn-primary">
-                <i class="bi bi-funnel"></i> Применить
-            </button>
+            <div class="d-flex flex-column gap-2">
+                <select name="sort" class="form-select" style="width: auto;">
+                    <option value="desc" {% if sort == 'desc' %}selected{% endif %}>
+                        <i class="bi bi-arrow-down"></i> Сначала новые
+                    </option>
+                    <option value="asc" {% if sort == 'asc' %}selected{% endif %}>
+                        <i class="bi bi-arrow-up"></i> Сначала старые
+                    </option>
+                </select>
+                <select name="per_page" class="form-select" style="width: auto;">
+                    {% for option in config.ITEMS_PER_PAGE_OPTIONS %}
+                    <option value="{{ option }}" {% if pagination.per_page == option %}selected{% endif %}>
+                        {{ option }} новостей
+                    </option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-funnel"></i> Применить
+                </button>
+            </div>
         </form>
     </div>
 </div>
@@ -63,7 +72,7 @@
     <ul class="pagination justify-content-center">
         {% if pagination.has_prev %}
         <li class="page-item">
-            <a class="page-link" href="{{ url_for('main.index', page=pagination.prev_num, per_page=pagination.per_page, author=author, sort=sort) }}">
+            <a class="page-link" href="{{ url_for('main.index', page=pagination.prev_num, per_page=pagination.per_page, authors=selected_authors, sort=sort) }}">
                 <i class="bi bi-chevron-left"></i>
             </a>
         </li>
@@ -72,7 +81,7 @@
         {% for page in pagination.iter_pages() %}
             {% if page %}
                 <li class="page-item {% if page == pagination.page %}active{% endif %}">
-                    <a class="page-link" href="{{ url_for('main.index', page=page, per_page=pagination.per_page, author=author, sort=sort) }}">
+                    <a class="page-link" href="{{ url_for('main.index', page=page, per_page=pagination.per_page, authors=selected_authors, sort=sort) }}">
                         {{ page }}
                     </a>
                 </li>
@@ -85,7 +94,7 @@
         
         {% if pagination.has_next %}
         <li class="page-item">
-            <a class="page-link" href="{{ url_for('main.index', page=pagination.next_num, per_page=pagination.per_page, author=author, sort=sort) }}">
+            <a class="page-link" href="{{ url_for('main.index', page=pagination.next_num, per_page=pagination.per_page, authors=selected_authors, sort=sort) }}">
                 <i class="bi bi-chevron-right"></i>
             </a>
         </li>
@@ -93,4 +102,4 @@
     </ul>
 </nav>
 {% endif %}
-{% endblock %} 
+{% endblock %}

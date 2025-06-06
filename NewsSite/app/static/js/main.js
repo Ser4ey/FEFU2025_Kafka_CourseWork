@@ -1,30 +1,3 @@
-// Функция для переключения темы
-function toggleTheme() {
-    const html = document.documentElement;
-    const currentTheme = html.getAttribute('data-theme');
-    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    
-    html.setAttribute('data-theme', newTheme);
-    localStorage.setItem('theme', newTheme);
-    
-    // Обновляем иконку
-    const themeIcon = document.getElementById('theme-icon');
-    if (themeIcon) {
-        themeIcon.className = newTheme === 'dark' ? 'bi bi-sun' : 'bi bi-moon';
-    }
-}
-
-// Функция для инициализации темы
-function initTheme() {
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-    
-    const themeIcon = document.getElementById('theme-icon');
-    if (themeIcon) {
-        themeIcon.className = savedTheme === 'dark' ? 'bi bi-sun' : 'bi bi-moon';
-    }
-}
-
 // Функция для кнопки прокрутки вверх
 function initScrollTop() {
     const scrollTopBtn = document.querySelector('.scroll-top');
@@ -70,13 +43,6 @@ function initFadeIn() {
 
 // Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', () => {
-    initTheme();
     initScrollTop();
     initFadeIn();
-    
-    // Добавляем обработчик для кнопки переключения темы
-    const themeToggle = document.getElementById('theme-toggle');
-    if (themeToggle) {
-        themeToggle.addEventListener('click', toggleTheme);
-    }
-}); 
+});

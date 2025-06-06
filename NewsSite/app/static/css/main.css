@@ -8,15 +8,6 @@
     --transition: all 0.3s ease;
 }
 
-[data-theme="dark"] {
-    --primary-color: #3b82f6;
-    --secondary-color: #60a5fa;
-    --text-color: #f3f4f6;
-    --bg-color: #111827;
-    --card-bg: #1f2937;
-    --card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
-}
-
 body {
     font-family: 'Inter', sans-serif;
     background-color: var(--bg-color);
@@ -30,10 +21,6 @@ body {
     backdrop-filter: blur(10px);
     box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
     transition: var(--transition);
-}
-
-[data-theme="dark"] .navbar {
-    background-color: rgba(31, 41, 55, 0.8) !important;
 }
 
 .navbar-brand {
@@ -135,4 +122,4 @@ body {
 .scroll-top:hover {
     background-color: var(--secondary-color);
     transform: translateY(-2px);
-} 
+}
