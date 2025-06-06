@@ -50,8 +50,14 @@ class NewsService(
         println("NewsService initialized and Kafka consumer started")
     }
 
-    fun getNextNewsReactive(): Mono<NewsToReview> {
-        println("Getting next news, current news: ${currentNews?.newsId}, pending news count: ${pendingNews.size}")
+    fun getNextNewsReactive(forceRefresh: Boolean = false): Mono<NewsToReview> {
+        println("Getting next news, current news: ${currentNews?.newsId}, pending news count: ${pendingNews.size}, forceRefresh: $forceRefresh")
+        
+        // Если запрошено принудительное обновление, сбрасываем текущую новость
+        if (forceRefresh) {
+            println("Force refresh requested, clearing current news")
+            currentNews = null
+        }
         
         // If we already have a current news item, return it
         currentNews?.let {
@@ -179,8 +185,8 @@ class NewsService(
         }
     }
 
-    suspend fun getNextNews(): NewsToReview? {
-        return getNextNewsReactive().block()
+    suspend fun getNextNews(forceRefresh: Boolean = false): NewsToReview? {
+        return getNextNewsReactive(forceRefresh).block()
     }
 
     suspend fun reviewNews(news: NewsToReview, isAccepted: Boolean, comment: String) {

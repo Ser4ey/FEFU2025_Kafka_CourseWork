@@ -11,7 +11,9 @@ import reactor.core.publisher.Mono
 class WebController(private val newsService: NewsService) {
 
     @GetMapping("/")
-    fun index(model: Model, @RequestParam(required = false) error: String?): Mono<String> {
+    fun index(model: Model, 
+             @RequestParam(required = false) error: String?,
+             @RequestParam(required = false) refresh: String?): Mono<String> {
         // Add error message if present
         error?.let { 
             when (it) {
@@ -24,7 +26,12 @@ class WebController(private val newsService: NewsService) {
             model.addAttribute("hasError", true)
         }
         
-        return newsService.getNextNewsReactive()
+        // Сбрасываем currentNews если есть параметр refresh
+        if (refresh != null) {
+            println("Refresh parameter detected, forcing news refresh")
+        }
+        
+        return newsService.getNextNewsReactive(refresh != null)
             .map { news ->
                 println("Adding news to model with ID: '${news.newsId}'")
                 model.addAttribute("news", news)
@@ -94,7 +101,7 @@ class WebController(private val newsService: NewsService) {
                 }
 
                 newsService.reviewNewsReactive(newsId, isAcceptedBool, comment)
-                    .then(Mono.just("redirect:/"))
+                    .then(Mono.just("redirect:/?refresh=" + System.currentTimeMillis()))
                     .onErrorResume { error ->
                         println("Error in reviewNews: ${error.message}")
                         error.printStackTrace()
