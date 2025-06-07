@@ -21,9 +21,10 @@ async def consume_reviewed_news(bot: Bot):
             status = "принята" if news_data["isAccepted"] else "отклонена"
             message_text = (
                 f"Ваша новость '{news_data['newsTitle']}' была {status}.\n"
+                f"ID новости: {news_data['newsId']}"
                 f"Комментарий редактора: {news_data['redactorComment']}"
             )
-            
+            print(message_text)
             await bot.send_message(author_id, message_text)
     finally:
         await consumer.stop() 

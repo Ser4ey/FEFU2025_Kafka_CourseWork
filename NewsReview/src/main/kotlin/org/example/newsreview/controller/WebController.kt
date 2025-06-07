@@ -77,13 +77,13 @@ class WebController(private val newsService: NewsService) {
                 
                 println("Received review request with newsId: '$newsId', isAccepted: $isAccepted, comment: '$comment'")
                 
-                // Validate newsId
+                // Валидация newsId
                 if (newsId.isNullOrBlank()) {
                     println("Error: newsId is null or blank")
                     return@flatMap Mono.just("redirect:/?error=invalid_news_id")
                 }
 
-                // Validate and convert isAccepted
+                // Валидация и конвертация isAccepted
                 val isAcceptedBool = when(isAccepted?.lowercase()) {
                     "true" -> true
                     "false" -> false
@@ -93,7 +93,7 @@ class WebController(private val newsService: NewsService) {
                     }
                 }
 
-                // Validate comment
+                // Валидация comment
                 if (comment.isNullOrBlank()) {
                     println("Error: comment is null or blank")
                     return@flatMap Mono.just("redirect:/?error=invalid_comment")
