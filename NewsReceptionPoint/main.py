@@ -8,6 +8,7 @@ from bot.handlers import start, suggest_news
 from kafka.consumer import consume_reviewed_news
 from database.models import Base
 from database.session import engine
+from bot.menu import set_bot_commands
 
 async def main():
     # Настройка логирования
@@ -28,8 +29,11 @@ async def main():
     # Запуск консьюмера Kafka в фоновом режиме
     asyncio.create_task(consume_reviewed_news(bot))
     
+    # Установка команд бота в меню
+    await set_bot_commands(bot)
+    
     # Запуск бота
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
-    asyncio.run(main()) 
+    asyncio.run(main())
